@@ -1,13 +1,31 @@
 async function upload() {
-  const file = document.getElementById("file").files[0];
+  const input = document.getElementById("file");
+  if (!input.files.length) {
+    alert("Please select an image first");
+    return;
+  }
+
   const form = new FormData();
-  form.append("file", file);
+  form.append("file", input.files[0]);
 
-  const res = await fetch("http://localhost:8000/convert", {
-    method: "POST",
-    body: form
-  });
+  try {
+    const res = await fetch("/api/convert", {
+      method: "POST",
+      body: form
+    });
 
-  const blob = await res.blob();
-  document.getElementById("preview").src = URL.createObjectURL(blob);
+    if (!res.ok) {
+      throw new Error("Image conversion failed");
+    }
+
+    const blob = await res.blob();
+    const imgURL = URL.createObjectURL(blob);
+
+    const preview = document.getElementById("preview");
+    preview.src = imgURL;
+    preview.style.display = "block";
+  } catch (err) {
+    alert("Server error. Please try again.");
+    console.error(err);
+  }
 }
