@@ -1,26 +1,31 @@
 from fastapi import FastAPI, UploadFile, File
-from fastapi.responses import FileResponse
+from fastapi.responses import Response
 from PIL import Image, ImageFilter
-import uuid
+import io
 
 app = FastAPI()
 
-INSTAGRAM_SIZE = (1080, 1080)
+SIZE = 1080
 
 @app.post("/convert")
-async def convert_image(file: UploadFile = File(...)):
-    image = Image.open(file.file).convert("RGB")
+async def convert(file: UploadFile = File(...)):
+    # Read image bytes (supports all formats Pillow can read)
+    image_bytes = await file.read()
+    original = Image.open(io.BytesIO(image_bytes)).convert("RGB")
 
-    bg = image.resize(INSTAGRAM_SIZE)
-    bg = bg.filter(ImageFilter.GaussianBlur(25))
+    # Background (blurred square)
+    bg = original.resize((SIZE, SIZE))
+    bg = bg.filter(ImageFilter.GaussianBlur(30))
 
-    image.thumbnail(INSTAGRAM_SIZE)
+    # Foreground (no crop)
+    original.thumbnail((SIZE, SIZE))
+    x = (SIZE - original.width) // 2
+    y = (SIZE - original.height) // 2
+    bg.paste(original, (x, y))
 
-    x = (INSTAGRAM_SIZE[0] - image.width) // 2
-    y = (INSTAGRAM_SIZE[1] - image.height) // 2
-    bg.paste(image, (x, y))
+    # Output as JPEG (Instagram best)
+    buf = io.BytesIO()
+    bg.save(buf, format="JPEG", quality=95)
+    buf.seek(0)
 
-    filename = f"/tmp/{uuid.uuid4()}.jpg"
-    bg.save(filename, "JPEG", quality=95)
-
-    return FileResponse(filename, media_type="image/jpeg")
+    return Response(content=buf.read(), media_type="image/jpeg")
