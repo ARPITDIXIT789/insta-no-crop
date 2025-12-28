@@ -1,26 +1,36 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8" />
-  <title>No Crop Instagram Image</title>
-  <link rel="stylesheet" href="styles.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Insta No Crop</title>
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#22c55e">
+
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-  <div class="card">
-    <h1>No Crop Instagram Image</h1>
+<div class="container">
+  <h1>Insta No Crop</h1>
 
-    <input type="file" id="file" accept="image/*" />
+  <input type="file" id="file" accept="image/*">
+  <button onclick="upload()">Convert</button>
 
-    <button id="convertBtn" onclick="upload()">Convert</button>
-
-    <img id="preview" alt="Preview" />
-
-    <div class="credit">
-      Built with ❤️ by <strong>Arpit Dixit</strong>
-    </div>
+  <div class="result">
+    <img id="preview">
+    <a id="downloadBtn" download="insta-no-crop.png">Download Image</a>
   </div>
 
-  <script src="app.js"></script>
+  <p class="credit">Made by Arpit Dixit</p>
+</div>
+
+<script src="app.js"></script>
+<script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("service-worker.js");
+  }
+</script>
 </body>
 </html>
