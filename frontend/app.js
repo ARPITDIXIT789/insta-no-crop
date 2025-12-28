@@ -1,43 +1,46 @@
-async function upload() {
-  const fileInput = document.getElementById("file");
-  const btn = document.getElementById("convertBtn");
-  const preview = document.getElementById("preview");
+let busy = false;
 
-  if (!fileInput.files.length) {
-    alert("Please select an image first");
+async function upload() {
+  if (busy) return;
+
+  const file = document.getElementById("file").files[0];
+  if (!file) {
+    alert("Select an image first");
     return;
   }
 
-  btn.disabled = true;
+  busy = true;
+  const btn = document.querySelector("button");
   btn.innerText = "Processing...";
-
-  preview.style.display = "none";
-  preview.src = "";
+  btn.disabled = true;
 
   const form = new FormData();
-  form.append("file", fileInput.files[0]);
+  form.append("file", file);
 
   try {
-    const res = await fetch("/api/convert", {
+    const res = await fetch("/convert", {
       method: "POST",
-      body: form,
-      cache: "no-store"
+      body: form
     });
 
-    if (!res.ok) {
-      throw new Error("Server error");
-    }
+    if (!res.ok) throw new Error();
 
     const blob = await res.blob();
-    const imgURL = URL.createObjectURL(blob);
+    const url = URL.createObjectURL(blob);
 
-    preview.src = imgURL;
-    preview.style.display = "block";
-  } catch (err) {
+    const img = document.getElementById("preview");
+    const dl = document.getElementById("downloadBtn");
+
+    img.src = url;
+    img.style.display = "block";
+
+    dl.href = url;
+    dl.style.display = "inline-block";
+  } catch {
     alert("Conversion failed");
-    console.error(err);
-  } finally {
-    btn.disabled = false;
-    btn.innerText = "Convert";
   }
+
+  btn.innerText = "Convert";
+  btn.disabled = false;
+  busy = false;
 }
