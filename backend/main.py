@@ -1,31 +1,25 @@
-from fastapi import FastAPI, UploadFile, File
-from fastapi.responses import Response
-from PIL import Image, ImageFilter
+from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.responses import StreamingResponse
+from PIL import Image
 import io
 
 app = FastAPI()
 
-SIZE = 1080
-
 @app.post("/convert")
 async def convert(file: UploadFile = File(...)):
-    # Read image bytes (supports all formats Pillow can read)
-    image_bytes = await file.read()
-    original = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    if file.content_type not in ["image/jpeg", "image/png", "image/webp"]:
+        raise HTTPException(status_code=400, detail="Unsupported format")
 
-    # Background (blurred square)
-    bg = original.resize((SIZE, SIZE))
-    bg = bg.filter(ImageFilter.GaussianBlur(30))
+    image = Image.open(file.file).convert("RGB")
+    image.thumbnail((1080, 1080))
 
-    # Foreground (no crop)
-    original.thumbnail((SIZE, SIZE))
-    x = (SIZE - original.width) // 2
-    y = (SIZE - original.height) // 2
-    bg.paste(original, (x, y))
+    canvas = Image.new("RGB", (1080, 1080), (0, 0, 0))
+    x = (1080 - image.width) // 2
+    y = (1080 - image.height) // 2
+    canvas.paste(image, (x, y))
 
-    # Output as JPEG (Instagram best)
-    buf = io.BytesIO()
-    bg.save(buf, format="JPEG", quality=95)
-    buf.seek(0)
+    buffer = io.BytesIO()
+    canvas.save(buffer, format="PNG", optimize=True)
+    buffer.seek(0)
 
-    return Response(content=buf.read(), media_type="image/jpeg")
+    return StreamingResponse(buffer, media_type="image/png")
