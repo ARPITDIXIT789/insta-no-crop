@@ -12,10 +12,11 @@ services:
       - ./certbot/www:/var/www/certbot
 
   backend:
-    build: ./backend
-    restart: always
-    expose:
-      - "8000"
+  build: ./backend
+  restart: always
+  ports:
+    - "8000:8000"
+
 
   certbot:
     image: certbot/certbot
