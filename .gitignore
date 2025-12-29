@@ -1,0 +1,5 @@
+# Certbot / SSL (DO NOT COMMIT)
+certbot/conf/live/
+certbot/conf/archive/
+certbot/conf/accounts/
+certbot/conf/renewal/*.conf
