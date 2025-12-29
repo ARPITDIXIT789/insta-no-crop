@@ -7,7 +7,6 @@
 
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#22c55e">
-
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -16,6 +15,22 @@
   <h1>Insta No Crop</h1>
 
   <input type="file" id="file" accept="image/*">
+
+  <!-- 🔥 BLUR SLIDER -->
+  <label>Blur Intensity</label>
+  <input type="range" id="blur" min="5" max="80" value="40">
+
+  <!-- 🎨 COLOR PICKER -->
+  <label>Background Color</label>
+  <input type="color" id="bgcolor" value="#000000">
+
+  <!-- MODE -->
+  <select id="mode">
+    <option value="blur">Blur Background</option>
+    <option value="color">Solid Color</option>
+    <option value="ai">AI Enhance</option>
+  </select>
+
   <button onclick="upload()">Convert</button>
 
   <div class="result">
