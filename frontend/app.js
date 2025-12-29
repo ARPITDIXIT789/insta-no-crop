@@ -16,6 +16,9 @@ async function upload() {
 
   const form = new FormData();
   form.append("file", file);
+  form.append("blur", document.getElementById("blur").value);
+  form.append("bgcolor", document.getElementById("bgcolor").value);
+  form.append("mode", document.getElementById("mode").value);
 
   try {
     const res = await fetch("/convert", {
@@ -33,9 +36,9 @@ async function upload() {
 
     img.src = url;
     img.style.display = "block";
-
     dl.href = url;
     dl.style.display = "inline-block";
+
   } catch {
     alert("Conversion failed");
   }
