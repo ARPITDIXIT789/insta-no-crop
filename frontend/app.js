@@ -1,40 +1,61 @@
-let busy = false;
-
 async function upload() {
-  if (busy) return;
+  const fileInput = document.getElementById("file");
+  const blurInput = document.getElementById("blur");
+  const modeInput = document.getElementById("mode");
+  const colorInput = document.getElementById("bgcolor");
+  const qualityInput = document.getElementById("quality");
 
-  const file = document.getElementById("file").files[0];
-  if (!file) {
-    alert("Select an image first");
+  const preview = document.getElementById("preview");
+  const downloadBtn = document.getElementById("downloadBtn");
+  const convertBtn = document.getElementById("convertBtn");
+
+  // Validation
+  if (!fileInput.files.length) {
+    alert("Please upload an image first");
     return;
   }
 
-  busy = true;
-  const btn = document.querySelector("button");
-  btn.innerText = "Processing...";
-  btn.disabled = true;
-
-  const form = new FormData();
-  form.append("file", file);
+  // UI state
+  convertBtn.disabled = true;
+  convertBtn.innerText = "⏳ Processing...";
+  preview.style.display = "none";
+  downloadBtn.style.display = "none";
 
   try {
+    const formData = new FormData();
+    formData.append("file", fileInput.files[0]);
+    formData.append("blur", blurInput.value);
+    formData.append("mode", modeInput.value);
+    formData.append("bgcolor", colorInput.value);
+    formData.append("quality", qualityInput.value);
+
     const res = await fetch("/convert", {
       method: "POST",
-      body: form
+      body: formData
     });
 
-    if (!res.ok) throw new Error();
+    if (!res.ok) {
+      throw new Error("Conversion failed");
+    }
 
     const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
+    const imageURL = URL.createObjectURL(blob);
 
-    const img = document.getElementById("preview");
-    const dl = document.getElementById("downloadBtn");
+    // Show result
+    preview.src = imageURL;
+    preview.style.display = "block";
 
-    img.src = url;
-    img.style.display = "block";
+    downloadBtn.href = imageURL;
+    downloadBtn.style.display = "inline-block";
 
-    dl.href = url;
+  } catch (err) {
+    alert("Something went wrong. Please try again.");
+    console.error(err);
+  } finally {
+    convertBtn.disabled = false;
+    convertBtn.innerText = "✨ Convert Image";
+  }
+}    dl.href = url;
     dl.style.display = "inline-block";
   } catch {
     alert("Conversion failed");
