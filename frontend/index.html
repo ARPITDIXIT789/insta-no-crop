@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -13,17 +13,60 @@
 <body>
 
 <div class="container">
-  <h1>Insta No Crop</h1>
+  <h1>📸 Insta No Crop</h1>
+  <p class="subtitle">Resize images for Instagram without cropping</p>
 
-  <input type="file" id="file" accept="image/*">
-  <button onclick="upload()">Convert</button>
+  <!-- Upload -->
+  <label class="upload-box">
+    <input type="file" id="file" accept="image/*" hidden>
+    <div class="upload-inner">
+      <span>📤</span>
+      <p>Tap to upload image</p>
+      <small>JPG • PNG • WEBP</small>
+    </div>
+  </label>
 
-  <div class="result">
-    <img id="preview">
-    <a id="downloadBtn" download="insta-no-crop.png">Download Image</a>
+  <!-- Blur -->
+  <div class="control">
+    <label>Blur Intensity</label>
+    <input type="range" id="blur" min="5" max="50" value="35">
   </div>
 
-  <p class="credit">Made by Arpit Dixit</p>
+  <!-- Mode -->
+  <div class="control">
+    <label>Background Mode</label>
+    <select id="mode">
+      <option value="blur">Blur</option>
+      <option value="ai">AI Smart Blur</option>
+      <option value="color">Solid Color</option>
+    </select>
+  </div>
+
+  <!-- Color -->
+  <div class="control" id="colorBox" style="display:none">
+    <label>Background Color</label>
+    <input type="color" id="bgcolor" value="#000000">
+  </div>
+
+  <!-- Quality -->
+  <div class="control">
+    <label>Export Quality</label>
+    <select id="quality">
+      <option value="normal">Normal (1080)</option>
+      <option value="hd">HD (2160)</option>
+      <option value="ultra">Ultra HD (4K)</option>
+    </select>
+  </div>
+
+  <button id="convertBtn" onclick="upload()">✨ Convert Image</button>
+
+  <!-- Result -->
+  <div class="result">
+    <img id="preview">
+    <a id="downloadBtn" download="insta-no-crop.png">⬇ Download Image</a>
+  </div>
+
+  <p class="credit">Made with ❤️ by <b>Arpit Dixit</b></p>
 </div>
 
 <script src="app.js"></script>
@@ -31,6 +74,13 @@
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("service-worker.js");
   }
+
+  // Toggle color picker
+  document.getElementById("mode").addEventListener("change", e => {
+    document.getElementById("colorBox").style.display =
+      e.target.value === "color" ? "block" : "none";
+  });
 </script>
+
 </body>
 </html>
