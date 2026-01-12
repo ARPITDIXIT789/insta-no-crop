@@ -7,18 +7,18 @@ app = FastAPI()
 
 @app.post("/convert")
 async def convert(file: UploadFile = File(...)):
-    if file.content_type not in ["image/jpeg", "image/png", "image/webp"]:
-        raise HTTPException(status_code=400, detail="Unsupported format")
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Unsupported file type")
 
-    # Original image
-    original = Image.open(file.file).convert("RGB")
+    try:
+        original = Image.open(file.file).convert("RGB")
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid image file")
 
-    # ---------- BLUR BACKGROUND ----------
     bg = original.copy()
     bg = bg.resize((1080, 1080))
     bg = bg.filter(ImageFilter.GaussianBlur(radius=40))
 
-    # ---------- FOREGROUND IMAGE ----------
     fg = original.copy()
     fg.thumbnail((1080, 1080))
 
