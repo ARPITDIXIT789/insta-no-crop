@@ -9,13 +9,11 @@ async function upload() {
   const downloadBtn = document.getElementById("downloadBtn");
   const convertBtn = document.getElementById("convertBtn");
 
-  // Validation
   if (!fileInput.files.length) {
     alert("Please upload an image first");
     return;
   }
 
-  // UI state
   convertBtn.disabled = true;
   convertBtn.innerText = "⏳ Processing...";
   preview.style.display = "none";
@@ -41,7 +39,6 @@ async function upload() {
     const blob = await res.blob();
     const imageURL = URL.createObjectURL(blob);
 
-    // Show result
     preview.src = imageURL;
     preview.style.display = "block";
 
@@ -49,19 +46,10 @@ async function upload() {
     downloadBtn.style.display = "inline-block";
 
   } catch (err) {
-    alert("Something went wrong. Please try again.");
     console.error(err);
+    alert("Something went wrong. Please try again.");
   } finally {
     convertBtn.disabled = false;
     convertBtn.innerText = "✨ Convert Image";
   }
-}    dl.href = url;
-    dl.style.display = "inline-block";
-  } catch {
-    alert("Conversion failed");
-  }
-
-  btn.innerText = "Convert";
-  btn.disabled = false;
-  busy = false;
 }
