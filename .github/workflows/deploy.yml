@@ -1,27 +1,41 @@
-name: Deploy to EC2
+name: Fast Deploy to EC2
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ Repo checkout
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # 2️⃣ SSH agent setup (reliable)
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
 
-      - name: Deploy to EC2
+      # 3️⃣ Fast deploy (ONLY backend rebuild)
+      - name: Deploy backend (fast)
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@instanocrop.duckdns.org << 'EOF'
+            set -e
             cd ~/insta-no-crop
+
+            echo "📥 Pull latest code"
             git pull origin main
-            docker compose down
-            docker compose up -d --build
+
+            echo "🐳 Build backend only"
+            docker compose build backend
+
+            echo "🚀 Restart backend only (no nginx downtime)"
+            docker compose up -d --no-deps backend
+
+            echo "🧹 Optional cleanup (safe)"
+            docker image prune -f
           EOF
