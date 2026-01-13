@@ -1,0 +1,9 @@
+.git
+.gitignore
+__pycache__
+*.pyc
+.env
+node_modules
+certbot
+frontend
+test.png
