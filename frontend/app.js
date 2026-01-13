@@ -26,6 +26,9 @@ async function upload() {
     formData.append("mode", modeInput.value);
     formData.append("bgcolor", colorInput.value);
     formData.append("quality", qualityInput.value);
+    const enhanceFace = document.getElementById("enhanceFace").checked;
+
+formData.append("enhance_face", enhanceFace);
 
     const res = await fetch("/convert", {
       method: "POST",
