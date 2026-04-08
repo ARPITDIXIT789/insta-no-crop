@@ -12,7 +12,7 @@ Make any photo Instagram-ready without cropping. Blur or color the background, k
 ## Quick Start (Ubuntu / Docker)
 ```bash
 # from repo root
-docker compose up -d --build
+docker-compose up -d --build
 ```
 - Nginx: ports 80/443 serve the frontend and proxy `/convert` to the backend.
 - Backend health: `http://localhost:8000/health`
