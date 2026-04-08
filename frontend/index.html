@@ -5,88 +5,113 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Insta No Crop</title>
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#22c55e">
 
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <div class="page">
+    <header class="hero">
+      <div class="eyebrow">CPU Friendly • Docker Ready</div>
+      <h1>📸 Insta No Crop</h1>
+      <p class="subtitle">Letterbox + blur + face enhance without losing a single pixel.</p>
+      <div class="hero-tags">
+        <span>AI Smart Blur</span>
+        <span>Face Enhance</span>
+        <span>4K Export</span>
+      </div>
+    </header>
 
-<div class="container">
-  <h1>📸 Insta No Crop</h1>
-  <p class="subtitle">Resize And enhance images for Instagram without cropping</p>
+    <main class="grid">
+      <section class="card upload-card">
+        <label id="dropZone" class="drop-zone">
+          <input type="file" id="file" accept="image/*" hidden>
+          <div class="drop-inner">
+            <div class="icon">⬆️</div>
+            <p class="drop-title">Drag & drop or click to upload</p>
+            <p class="drop-sub">JPG • PNG • WEBP</p>
+            <p class="hint">We recommend images under 15 MB</p>
+          </div>
+        </label>
+        <div id="fileMeta" class="file-meta">No image selected yet.</div>
 
-  <!-- Upload -->
-  <label class="upload-box">
-    <input type="file" id="file" accept="image/*" hidden>
-    <div class="upload-inner">
-      <span>📤</span>
-      <p>Tap to upload image</p>
-      <small>JPG • PNG • WEBP</small>
-    </div>
-  </label>
+        <div class="controls">
+          <div class="control">
+            <label for="blur">Blur Intensity</label>
+            <input type="range" id="blur" min="5" max="60" value="35">
+            <div class="range-value" id="blurValue">35</div>
+          </div>
 
-  <!-- Blur -->
-  <div class="control">
-    <label>Blur Intensity</label>
-    <input type="range" id="blur" min="5" max="50" value="35">
+          <div class="control">
+            <label for="mode">Background Mode</label>
+            <select id="mode">
+              <option value="blur">Classic Blur</option>
+              <option value="ai">AI Smart Blur</option>
+              <option value="color">Solid Color</option>
+            </select>
+          </div>
+
+          <div class="control" id="colorBox" style="display:none">
+            <label for="bgcolor">Background Color</label>
+            <input type="color" id="bgcolor" value="#0f172a">
+          </div>
+
+          <div class="control">
+            <label for="quality">Export Quality</label>
+            <select id="quality">
+              <option value="normal">Normal (1080)</option>
+              <option value="hd">HD (2160)</option>
+              <option value="ultra">Ultra HD (4K)</option>
+            </select>
+          </div>
+
+          <div class="control checkbox">
+            <label>
+              <input type="checkbox" id="enhanceFace">
+              ✨ Enhance face (Remini-style)
+            </label>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="convertBtn">✨ Convert Image</button>
+          <button id="resetBtn" type="button" class="ghost">Reset</button>
+        </div>
+
+        <p id="statusText" class="status-text">Ready when you are.</p>
+      </section>
+
+      <section class="card preview-card">
+        <div class="preview-wrapper">
+          <img id="preview" alt="Converted preview">
+          <div id="placeholder" class="placeholder">
+            <div class="icon">🎯</div>
+            <p>Preview will show up here after conversion.</p>
+          </div>
+        </div>
+
+        <div class="result-actions">
+          <a id="downloadBtn" download="insta-no-crop.png">⬇️ Download PNG</a>
+          <button id="copyLinkBtn" type="button" class="ghost">Copy preview URL</button>
+        </div>
+      </section>
+    </main>
+
+    <footer class="credit">
+      Made with ❤️ by <b>Arpit Dixit</b> • Works best in Chrome/Firefox • Offline ready
+    </footer>
   </div>
 
-  <!-- Mode -->
-  <div class="control">
-    <label>Background Mode</label>
-    <select id="mode">
-      <option value="blur">Blur</option>
-      <option value="ai">AI Smart Blur</option>
-      <option value="color">Solid Color</option>
-    </select>
-  </div>
-
-  <!-- Color -->
-  <div class="control" id="colorBox" style="display:none">
-    <label>Background Color</label>
-    <input type="color" id="bgcolor" value="#000000">
-  </div>
-
-  <!-- Quality -->
-  <div class="control">
-    <label>Export Quality</label>
-    <select id="quality">
-      <option value="normal">Normal (1080)</option>
-      <option value="hd">HD (2160)</option>
-      <option value="ultra">Ultra HD (4K)</option>
-    </select>
-  </div>
-<div class="control">
-  <label>
-    <input type="checkbox" id="enhanceFace">
-    ✨ Enhance Face (AI Style)
-  </label>
-</div>
-
-  <button id="convertBtn" onclick="upload()">✨ Convert Image</button>
-
-  <!-- Result -->
-  <div class="result">
-    <img id="preview">
-    <a id="downloadBtn" download="insta-no-crop.png">⬇ Download Image</a>
-  </div>
-
-  <p class="credit">Made with ❤️ by <b>Arpit Dixit</b></p>
-</div>
-
-<script src="app.js"></script>
-<script>
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("service-worker.js");
-  }
-
-  // Toggle color picker
-  document.getElementById("mode").addEventListener("change", e => {
-    document.getElementById("colorBox").style.display =
-      e.target.value === "color" ? "block" : "none";
-  });
-</script>
-
+  <script src="app.js"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("service-worker.js");
+    }
+  </script>
 </body>
 </html>
