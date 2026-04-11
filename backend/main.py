@@ -7,7 +7,7 @@ from typing import Literal
 import cv2
 import numpy as np
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, JSONResponse
 from PIL import Image, ImageEnhance, ImageFilter, ImageOps
 
 app = FastAPI(title="Insta No Crop API", version="1.1.0")
@@ -20,12 +20,19 @@ Quality = Literal["normal", "hd", "ultra"]
 Mode = Literal["blur", "ai", "color"]
 
 QUALITY_TO_SIZE = {"normal": 1080, "hd": 2160, "ultra": 3840}
-MAX_UPLOAD_BYTES = 15 * 1024 * 1024  # keep under 20 MB nginx limit
+MAX_UPLOAD_BYTES = 15 * 1024 * 1024
 MIN_BLUR, MAX_BLUR = 3, 80
 
 
+# ✅ ROOT ROUTE (IMPORTANT FOR TEST + NGINX)
+@app.get("/")
+async def root():
+    return {"message": "Backend running 🚀"}
+
+
+# ✅ HEALTH ROUTE (DOCKER HEALTHCHECK FIX)
 @app.get("/health")
-async def health() -> dict[str, str]:
+async def health():
     return {"status": "ok"}
 
 
@@ -60,7 +67,7 @@ async def convert(
 
     try:
         image = Image.open(file.file).convert("RGB")
-        image = ImageOps.exif_transpose(image)  # honor camera orientation
+        image = ImageOps.exif_transpose(image)
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid or corrupted image")
 
@@ -79,10 +86,6 @@ async def convert(
 
 
 def enhance_face_only(pil_img: Image.Image) -> Image.Image:
-    """
-    Sharpen and slightly boost contrast only within detected faces
-    to emulate Remini-style clarity without overprocessing the scene.
-    """
     img = np.array(pil_img)
     gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 
@@ -124,7 +127,7 @@ def compose_canvas(
         background = Image.new("RGB", (canvas_size, canvas_size), bgcolor)
     elif mode == "ai":
         background = smart_background(image, canvas_size, blur)
-    else:  # classic blur
+    else:
         background = image.copy().resize(
             (canvas_size, canvas_size), Image.Resampling.LANCZOS
         )
@@ -137,10 +140,6 @@ def compose_canvas(
 
 
 def smart_background(image: Image.Image, canvas_size: int, blur: int) -> Image.Image:
-    """
-    AI-ish background: smooth radial gradient from dominant colors
-    blended with a softened source texture to keep context.
-    """
     small = image.resize((48, 48), Image.Resampling.BILINEAR)
     arr = np.array(small).reshape(-1, 3)
     mean = tuple(np.clip(arr.mean(axis=0), 0, 255).astype("uint8"))
