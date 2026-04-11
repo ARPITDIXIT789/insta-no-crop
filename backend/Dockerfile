@@ -1,9 +1,8 @@
-# ---- Stage 1: Builder ----
+# ---- Stage 1 ----
 FROM python:3.10-slim as builder
 
 WORKDIR /install
 
-# sirf build ke liye deps
 RUN apt-get update && apt-get install -y \
     build-essential \
     libjpeg-dev \
@@ -12,19 +11,13 @@ RUN apt-get update && apt-get install -y \
 
 COPY requirements.txt .
 
-# wheels build karo (fast + reusable)
-RUN pip install --upgrade pip && \
-    pip wheel --no-cache-dir --no-deps -r requirements.txt
+RUN pip wheel --no-cache-dir --no-deps -r requirements.txt -w /wheels
 
-# ---- Stage 2: Final ----
+# ---- Stage 2 ----
 FROM python:3.10-slim
-
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-# runtime deps only (minimal)
 RUN apt-get update && apt-get install -y \
     libjpeg-dev \
     zlib1g-dev \
@@ -32,13 +25,10 @@ RUN apt-get update && apt-get install -y \
     libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# wheels copy karo
-COPY --from=builder /install /install
+COPY --from=builder /wheels /wheels
 
-# install from wheels (fast + clean)
-RUN pip install --no-cache-dir /install/*
+RUN pip install --no-cache-dir /wheels/*
 
-# app code last
 COPY main.py .
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
