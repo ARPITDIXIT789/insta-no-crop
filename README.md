@@ -1,46 +1,72 @@
-# 📸 Insta No Crop
+# Insta No Crop
 
-Make any photo Instagram-ready without cropping. Blur or color the background, keep faces sharp (Remini-style), and export up to 4K — all on a CPU-friendly FastAPI backend.
+Instagram-ready square exports without cropping. The app keeps your full image, generates an aesthetic background, and can auto-tune settings using an AI API.
 
 ## Highlights
-- Classic blur, AI smart gradient blur, or solid color backgrounds.
-- Face-only enhancement so subjects stay crisp.
-- 1080p / 2K / 4K square exports.
-- PWA with offline caching and drag-and-drop UI.
-- Dockerized stack (Nginx + FastAPI) with health checks.
+- No-crop output with blur, smart AI-style blur, or solid color background.
+- Face enhancement for sharper subjects.
+- 1080 / 2160 / 3840 square export options.
+- AI Auto Tune endpoint to suggest mode, blur, color, quality, and face enhancement.
+- Multi-stage Docker backend image for faster rebuilds and smaller runtime image.
 
-## Quick Start (Ubuntu / Docker)
+## Run with Docker
+Use whichever command exists on your server:
+
 ```bash
-# from repo root
+# Docker Compose plugin
+docker compose up -d --build
+
+# Legacy binary
 docker-compose up -d --build
 ```
-- Nginx: ports 80/443 serve the frontend and proxy `/convert` to the backend.
-- Backend health: `http://localhost:8000/health`
-- Logs: `make logs`
 
-## API
+Frontend: `http://<server-ip>/`  
+Backend health: `http://<server-ip>:8000/health`
+
+## API Endpoints
+### 1) Convert image
 `POST /convert` (multipart/form-data)
 - `file` (required): image
-- `blur` (int 3-80): blur radius for classic mode
+- `blur`: int (3-80)
 - `mode`: `blur` | `ai` | `color`
-- `bgcolor`: hex (`#000000`) when `mode=color`
-- `quality`: `normal` (1080) | `hd` (2160) | `ultra` (3840)
+- `bgcolor`: `#RRGGBB` (used in `color` mode)
+- `quality`: `normal` | `hd` | `ultra`
 - `enhance_face`: `true` / `false`
 
-Response: PNG image stream.
+Returns PNG stream.
 
-## Frontend
-- Drag & drop or click to upload, live status, reset, copy preview URL.
-- Smart default quality based on source resolution.
-- PWA service worker caches core assets for offline use.
+### 2) AI setting recommendation
+`POST /ai/suggest-settings` (multipart/form-data)
+- `file` (required): image
+- `goal` (optional): text like `clean look`, `dramatic`, `bright feed`
 
-## Dev Tasks
-- `make up` / `make down` to start/stop
-- `make rebuild-backend` to rebuild only API container
-- `make restart-backend` to hot-restart backend
-- `make certbot-renew` to renew certificates (when mapped)
+Returns:
+- `source`: `ai` or `fallback`
+- `settings`: mode, blur, quality, bgcolor, enhance_face, reason
+- `signals`: image metadata used for recommendation
 
-## Deployment Notes
-- TLS served by Nginx; HSTS enabled.
-- Backend runs 2 uvicorn workers; healthcheck wired for Compose.
-- Limit uploads to 15 MB; Nginx `client_max_body_size` set to 20M.
+## AI API Configuration
+Set env vars on backend service:
+
+- `OPENAI_API_KEY`: required for live AI recommendations.
+- `OPENAI_MODEL`: optional, default `gpt-4.1-mini`.
+- `OPENAI_API_URL`: optional, default `https://api.openai.com/v1/chat/completions`.
+
+If `OPENAI_API_KEY` is not set, app uses local heuristic fallback.
+
+## Docker Build Optimizations Included
+- Multi-stage backend Dockerfile (builder + slim runtime).
+- Dependency layer cached separately from app code.
+- Runtime image excludes compile toolchain.
+- Backend-level `.dockerignore` for smaller build context.
+
+## Ops Notes
+- Keep public inbound ports to `80`, `443`, and restricted `22`.
+- Avoid exposing `8000` publicly in production.
+- If using old `docker-compose` and seeing `ContainerConfig` errors, run:
+
+```bash
+docker-compose down
+docker rm -f $(docker ps -aq --filter "name=insta-no-crop")
+docker-compose up -d --build
+```

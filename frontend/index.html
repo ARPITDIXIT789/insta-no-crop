@@ -17,8 +17,8 @@
 <body>
   <div class="page">
     <header class="hero">
-      <div class="eyebrow">CPU Friendly • Docker Ready</div>
-      <h1>📸 Insta No Crop</h1>
+      <div class="eyebrow">CPU Friendly | Docker Ready</div>
+      <h1>Insta No Crop</h1>
       <p class="subtitle">Letterbox + blur + face enhance without losing a single pixel.</p>
       <div class="hero-tags">
         <span>AI Smart Blur</span>
@@ -32,10 +32,10 @@
         <label id="dropZone" class="drop-zone">
           <input type="file" id="file" accept="image/*" hidden>
           <div class="drop-inner">
-            <div class="icon">⬆️</div>
-            <p class="drop-title">Drag & drop or click to upload</p>
-            <p class="drop-sub">JPG • PNG • WEBP</p>
-            <p class="hint">We recommend images under 15 MB</p>
+            <div class="icon">Upload</div>
+            <p class="drop-title">Drag and drop or click to upload</p>
+            <p class="drop-sub">JPG | PNG | WEBP</p>
+            <p class="hint">Recommended size: under 15 MB</p>
           </div>
         </label>
         <div id="fileMeta" class="file-meta">No image selected yet.</div>
@@ -73,13 +73,19 @@
           <div class="control checkbox">
             <label>
               <input type="checkbox" id="enhanceFace">
-              ✨ Enhance face (Remini-style)
+              Enhance face (Remini-style)
             </label>
+          </div>
+
+          <div class="control">
+            <label for="aiGoal">AI Goal</label>
+            <input id="aiGoal" type="text" placeholder="clean look, dramatic, bright feed">
           </div>
         </div>
 
         <div class="actions">
-          <button id="convertBtn">✨ Convert Image</button>
+          <button id="aiSuggestBtn" type="button" class="ghost">AI Auto Tune</button>
+          <button id="convertBtn">Convert Image</button>
           <button id="resetBtn" type="button" class="ghost">Reset</button>
         </div>
 
@@ -90,20 +96,20 @@
         <div class="preview-wrapper">
           <img id="preview" alt="Converted preview">
           <div id="placeholder" class="placeholder">
-            <div class="icon">🎯</div>
+            <div class="icon">Preview</div>
             <p>Preview will show up here after conversion.</p>
           </div>
         </div>
 
         <div class="result-actions">
-          <a id="downloadBtn" download="insta-no-crop.png">⬇️ Download PNG</a>
+          <a id="downloadBtn" download="insta-no-crop.png">Download PNG</a>
           <button id="copyLinkBtn" type="button" class="ghost">Copy preview URL</button>
         </div>
       </section>
     </main>
 
     <footer class="credit">
-      Made with ❤️ by <b>Arpit Dixit</b> • Works best in Chrome/Firefox • Offline ready
+      Built by Arpit Dixit | Works best in Chrome/Firefox | Offline ready
     </footer>
   </div>
 

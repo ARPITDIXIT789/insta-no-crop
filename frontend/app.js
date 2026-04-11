@@ -8,6 +8,8 @@ const colorBox = document.getElementById("colorBox");
 const colorInput = document.getElementById("bgcolor");
 const qualityInput = document.getElementById("quality");
 const enhanceFaceInput = document.getElementById("enhanceFace");
+const aiGoalInput = document.getElementById("aiGoal");
+const aiSuggestBtn = document.getElementById("aiSuggestBtn");
 const convertBtn = document.getElementById("convertBtn");
 const resetBtn = document.getElementById("resetBtn");
 const copyLinkBtn = document.getElementById("copyLinkBtn");
@@ -22,6 +24,12 @@ let previewURL = null;
 function setStatus(text, tone = "info") {
   statusText.textContent = text;
   statusText.dataset.tone = tone;
+}
+
+function setBusyState(isBusy, label = "Convert Image") {
+  convertBtn.disabled = isBusy;
+  aiSuggestBtn.disabled = isBusy;
+  convertBtn.textContent = isBusy ? "Processing..." : label;
 }
 
 function formatBytes(bytes) {
@@ -51,7 +59,6 @@ function handleFileSelection(file) {
 
   currentFile = file;
 
-  // sync native input so formData uses the same file
   const dt = new DataTransfer();
   dt.items.add(file);
   fileInput.files = dt.files;
@@ -59,13 +66,78 @@ function handleFileSelection(file) {
   const tempURL = URL.createObjectURL(file);
   const img = new Image();
   img.onload = () => {
-    fileMeta.textContent = `${file.name} · ${formatBytes(file.size)} · ${img.width}×${img.height}`;
+    fileMeta.textContent = `${file.name} | ${formatBytes(file.size)} | ${img.width}x${img.height}`;
     setDefaultQuality(img.width, img.height);
     URL.revokeObjectURL(tempURL);
   };
   img.src = tempURL;
 
-  setStatus("Ready to convert. Adjust settings and hit Convert.", "info");
+  setStatus("Ready to convert. You can also click AI Auto Tune.", "info");
+}
+
+function applySuggestedSettings(settings) {
+  if (!settings) return;
+
+  if (settings.mode) {
+    modeInput.value = settings.mode;
+    colorBox.style.display = settings.mode === "color" ? "block" : "none";
+  }
+  if (settings.blur !== undefined) {
+    blurInput.value = settings.blur;
+    blurValue.textContent = String(settings.blur);
+  }
+  if (settings.quality) {
+    qualityInput.value = settings.quality;
+  }
+  if (settings.bgcolor) {
+    colorInput.value = settings.bgcolor;
+  }
+  if (settings.enhance_face !== undefined) {
+    enhanceFaceInput.checked = Boolean(settings.enhance_face);
+  }
+}
+
+async function aiSuggest() {
+  if (!currentFile) {
+    setStatus("Upload an image first to use AI Auto Tune.", "warn");
+    return;
+  }
+
+  setBusyState(true, "Convert Image");
+  setStatus("Requesting AI recommendations...", "info");
+
+  try {
+    const formData = new FormData();
+    formData.append("file", currentFile);
+    formData.append("goal", aiGoalInput.value || "balanced");
+
+    const res = await fetch("/ai/suggest-settings", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!res.ok) {
+      let detail = "AI suggestion failed.";
+      try {
+        const body = await res.json();
+        detail = body.detail || detail;
+      } catch (_) {
+        // ignore parse failure
+      }
+      throw new Error(detail);
+    }
+
+    const data = await res.json();
+    applySuggestedSettings(data.settings);
+    const source = data.source === "ai" ? "AI API" : "local fallback";
+    const reason = data.settings?.reason ? ` ${data.settings.reason}` : "";
+    setStatus(`Settings updated from ${source}.${reason}`, "success");
+  } catch (err) {
+    console.error(err);
+    setStatus(err.message || "AI suggestion failed.", "error");
+  } finally {
+    setBusyState(false, "Convert Image");
+  }
 }
 
 async function convert() {
@@ -75,9 +147,8 @@ async function convert() {
     return;
   }
 
-  convertBtn.disabled = true;
-  convertBtn.textContent = "⏳ Processing...";
-  setStatus("Processing on the server. This may take a few seconds…", "info");
+  setBusyState(true, "Convert Image");
+  setStatus("Processing on the server. This may take a few seconds...", "info");
 
   try {
     const formData = new FormData();
@@ -117,13 +188,12 @@ async function convert() {
     downloadBtn.download = `${cleanName}_nocrop.png`;
     downloadBtn.style.display = "inline-block";
 
-    setStatus("Done! Download or copy the preview link.", "success");
+    setStatus("Done. Download or copy the preview link.", "success");
   } catch (err) {
     console.error(err);
     setStatus(err.message || "Something went wrong.", "error");
   } finally {
-    convertBtn.disabled = false;
-    convertBtn.textContent = "✨ Convert Image";
+    setBusyState(false, "Convert Image");
   }
 }
 
@@ -137,7 +207,8 @@ function resetUI() {
   preview.style.display = "none";
   placeholder.style.display = "flex";
   downloadBtn.style.display = "none";
-  setStatus("Reset. Drop another image to start.", "info");
+  aiGoalInput.value = "";
+  setStatus("Reset complete. Drop another image to start.", "info");
 }
 
 function copyPreviewURL() {
@@ -148,10 +219,9 @@ function copyPreviewURL() {
   navigator.clipboard
     .writeText(previewURL)
     .then(() => setStatus("Preview URL copied to clipboard.", "success"))
-    .catch(() => setStatus("Could not copy. Please copy manually from the address bar.", "warn"));
+    .catch(() => setStatus("Could not copy. Please copy manually.", "warn"));
 }
 
-// Events
 fileInput.addEventListener("change", (e) => handleFileSelection(e.target.files[0]));
 
 dropZone.addEventListener("dragover", (e) => {
@@ -179,6 +249,7 @@ blurInput.addEventListener("input", (e) => {
   blurValue.textContent = e.target.value;
 });
 
+aiSuggestBtn.addEventListener("click", aiSuggest);
 convertBtn.addEventListener("click", convert);
 resetBtn.addEventListener("click", resetUI);
 copyLinkBtn.addEventListener("click", copyPreviewURL);
