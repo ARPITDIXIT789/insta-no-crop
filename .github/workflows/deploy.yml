@@ -1,41 +1,68 @@
-name: Fast Deploy to EC2
+name: Deploy to EC2
 
+# Trigger: jab bhi main branch pe code push ho
+# build-and-push.yml pehle chalega (workflow_run se ensure karte hain)
 on:
   push:
     branches:
       - main
+  workflow_run:
+    workflows: ["Build and Push to DockerHub"]
+    types:
+      - completed
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # Sirf tab chale jab build successful hua ho (workflow_run ke case mein)
+    if: ${{ github.event_name == 'push' || github.event.workflow_run.conclusion == 'success' }}
 
     steps:
-      # 1️⃣ Repo checkout
+      # 1️⃣ Repo checkout (docker-compose.yml ke liye)
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2️⃣ SSH agent setup (reliable)
+      # 2️⃣ SSH agent setup
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
 
-      # 3️⃣ Fast deploy (ONLY backend rebuild)
-      - name: Deploy backend (fast)
+      # 3️⃣ Known host add karo (strict host checking disable)
+      - name: Add EC2 to known hosts
+        run: |
+          ssh-keyscan -H instanocrop.duckdns.org >> ~/.ssh/known_hosts
+
+      # 4️⃣ Deploy to EC2 — pull latest images, no local build
+      - name: Deploy to EC2 (pull latest images)
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@instanocrop.duckdns.org << 'EOF'
             set -e
             cd ~/insta-no-crop
 
-            echo "📥 Pull latest code"
+            echo "📥 Pull latest code (docker-compose.yml updates)"
             git pull origin main
 
-            echo "🐳 Build backend only"
-            docker compose build backend
+            echo "🐳 Login to DockerHub (token-based)"
+            echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
 
-            echo "🚀 Restart backend only (no nginx downtime)"
-            docker compose up -d --no-deps backend
+            echo "⬇️ Pull latest images from DockerHub"
+            docker compose pull backend nginx
 
-            echo "🧹 Optional cleanup (safe)"
+            echo "🚀 Restart services with new images (no build on EC2)"
+            docker compose up -d --no-deps --force-recreate backend nginx
+
+            echo "🧹 Cleanup old images (safe)"
             docker image prune -f
+
+            echo "✅ Deploy complete!"
+            docker compose ps
           EOF
+
+      # 5️⃣ Health check verification
+      - name: Health check
+        run: |
+          sleep 10
+          curl -fsS http://instanocrop.duckdns.org/health || echo "⚠️ Health check failed — check logs"
+          echo ""
+          echo "🎉 Deploy completed successfully!"
