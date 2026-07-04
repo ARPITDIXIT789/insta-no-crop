@@ -37,9 +37,21 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(
     caches.match(request).then((cached) => {
       if (cached) return cached;
-     if (response.ok && response.type === 'basic') {
-  cache.put(request, response.clone());
-});
+      return fetch(request).then((response) => {
+        // Sirf successful same-origin responses cache karo
+        // 4xx/5xx aur cross-origin responses cache mat karo
+        if (response.ok && response.type === "basic") {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+        }
+        return response;
+      }).catch(() => {
+        // Network fail ho gaya — cached fallback nahi hai
+        return new Response("Offline and not cached.", {
+          status: 503,
+          statusText: "Service Unavailable",
+        });
+      });
     })
   );
 });

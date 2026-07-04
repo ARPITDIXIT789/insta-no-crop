@@ -3,3 +3,26 @@ certbot/conf/live/
 certbot/conf/archive/
 certbot/conf/accounts/
 certbot/conf/renewal/*.conf
+
+# Python build artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+
+# Environment / secrets
+.env
+.env.*
+*.pem
+*.key
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp

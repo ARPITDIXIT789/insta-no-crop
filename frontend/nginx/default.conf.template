@@ -8,15 +8,26 @@ server {
         root /var/www/certbot;
     }
 
-    # YAHAN CHANGE KIYA HAI: backend ki jagah 127.0.0.1 kiya hai
+    # Backend proxy — BACKEND_HOST env var se resolve hota hai
+    # Docker Compose: "backend" (service name, compose DNS)
+    # AWS ECS (awsvpc): "127.0.0.1" (shared network namespace)
+    # Bare-metal: "localhost"
     location /convert {
-        proxy_pass http://127.0.0.1:8000/convert;
+        proxy_pass http://${BACKEND_HOST}:8000/convert;
         proxy_http_version 1.1;
-
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        client_max_body_size 20M;
+    }
 
+    # AI suggest-settings route — pehle missing tha
+    location /ai/ {
+        proxy_pass http://${BACKEND_HOST}:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         client_max_body_size 20M;
     }
 
