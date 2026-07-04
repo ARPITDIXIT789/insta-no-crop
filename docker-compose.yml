@@ -1,15 +1,18 @@
-version: "3.9"
-
 services:
   nginx:
-    image: nginx:latest
+    build:
+      context: ./frontend
+      dockerfile: dockerfile
+    image: insta-no-crop/frontend:latest
     restart: always
     ports:
       - "80:80"
       - "443:443"
+    environment:
+      # Compose ke andar service name se backend resolve hota hai
+      # ECS pe iski value "127.0.0.1" honi chahiye
+      - BACKEND_HOST=backend
     volumes:
-      - ./frontend:/usr/share/nginx/html
-      - ./frontend/nginx:/etc/nginx/conf.d
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
     depends_on:
