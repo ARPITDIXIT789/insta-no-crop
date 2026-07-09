@@ -11,9 +11,10 @@ server {
     # Backend proxy — BACKEND_HOST env var se resolve hota hai
     # Docker Compose: "backend" (service name, compose DNS)
     # AWS ECS (awsvpc): "127.0.0.1" (shared network namespace)
-    # Bare-metal: "localhost"
+    # Kubernetes: "backend-service" (K8s internal DNS)
     location /convert {
-        proxy_pass http://${BACKEND_HOST}:8000/convert;
+        set $backend_addr ${BACKEND_HOST}:8000; # <-- YEH LINE ADD KI (K8s Hack)
+        proxy_pass http://$backend_addr/convert; # <-- VARIABLE USE KIYA
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -21,9 +22,10 @@ server {
         client_max_body_size 20M;
     }
 
-    # AI suggest-settings route — pehle missing tha
+    # AI suggest-settings route
     location /ai/ {
-        proxy_pass http://${BACKEND_HOST}:8000;
+        set $backend_addr ${BACKEND_HOST}:8000; # <-- YEH LINE ADD KI (K8s Hack)
+        proxy_pass http://$backend_addr/;       # <-- VARIABLE USE KIYA
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
