@@ -5,7 +5,7 @@ import json
 import os
 import re
 from typing import Literal
-
+from prometheus_fastapi_instrumentator import Instrumentator
 import cv2
 import numpy as np
 import requests
@@ -18,7 +18,8 @@ app = FastAPI(title="Insta No Crop API", version="1.1.0")
 face_cascade = cv2.CascadeClassifier(
     cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
 )
-
+# --- Prometheus Monitoring Setup ---
+Instrumentator().instrument(app).expose(app, endpoint="/metrics", include_in_schema=False)
 Quality = Literal["normal", "hd", "ultra"]
 Mode = Literal["blur", "ai", "color"]
 
