@@ -2,7 +2,7 @@ fastapi>=0.111.0
 uvicorn[standard]>=0.30.0
 pillow>=10.3.0
 python-multipart>=0.0.18
-opencv-python-headless>=4.9.0.80
+opencv-contrib-python==4.9.0.80
 numpy>=1.26.0
 requests>=2.32.0
 prometheus-fastapi-instrumentator>=7.0.0
