@@ -14,8 +14,7 @@ services:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
     depends_on:
-      backend:
-        condition: service_healthy
+      - backend
 
   backend:
     build:
@@ -29,11 +28,6 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4.1-mini}
       - OPENAI_API_URL=${OPENAI_API_URL:-https://api.openai.com/v1/chat/completions}
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
     expose:
       - "8000"
 
