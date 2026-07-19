@@ -9,8 +9,6 @@ services:
       - "80:80"
       - "443:443"
     environment:
-      # Compose ke andar service name se backend resolve hota hai
-      # ECS pe iski value "127.0.0.1" honi chahiye
       - BACKEND_HOST=backend
     volumes:
       - ./certbot/conf:/etc/letsencrypt
@@ -44,3 +42,29 @@ services:
     volumes:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
+
+  # ==========================================
+  # PROMETHEUS SERVICE (Added)
+  # ==========================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on:
+      - backend
+
+  # ==========================================
+  # GRAFANA SERVICE (Added)
+  # ==========================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin # Password set kiya
+    depends_on:
+      - prometheus
